@@ -1,0 +1,213 @@
+---
+title: "Visualizations for Distribution of Different Indicators"
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+        lib_dir: "libs"
+        self_contained: FALSE
+---
+
+```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+library(data.table)
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(car)
+library(readr)
+library(lubridate)
+library(ggpubr)
+library(splines)
+library(mgcv)
+library(kableExtra)
+library(httr)
+library(jsonlite)
+library(purrr)
+library(ggcorrplot)
+library(scales)
+library(tm)
+library(SnowballC)
+library(wordcloud2)
+library(tibble)
+library(caret)
+library(randomForest)
+library(slam)
+library(plotly)
+```
+
+It is important to note that, the economic indicators such as GDP tend to have highly skewed distributions, meaning that a few extremely large values dominate the dataset. This creates problems when analyzing relationships between variables, as a small number of high-GDP countries can distort trends, making it difficult to see meaningful patterns. Therefore, I log transformed the economic indicators for better visualization.
+
+Here are the distributions of the three economic indicators across all countries from 1960 to 2023.
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+life_expectancy_data <- read.csv("life_expectancy_data.csv")
+mortality_data <- read.csv("mortality_data.csv")
+immunization_data <- read.csv("immunization_data.csv")
+water_access_data <- read.csv("water_access_data.csv")
+sanitation_access_data <- read.csv("sanitation_access_data.csv")
+gdp_data <- read.csv("gdp_data.csv")
+unemployment_data <- read.csv("unemployment_data.csv")
+inflation_data <- read.csv("inflation_data.csv")
+
+merged_data <- life_expectancy_data %>%
+  full_join(mortality_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(immunization_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(water_access_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(sanitation_access_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(gdp_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(unemployment_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(inflation_data, by = c("country_code", "country_name", "year"))
+
+merged_data <- merged_data %>%
+  select(
+    country_code = country_code,
+    country_name = country_name,
+    year = year,
+    life_expectancy = indicator_value.x,  
+    mortality_rate = indicator_value.y,   
+    immunization_rate = indicator_value.x.x,  
+    water_access = indicator_value.y.y, 
+    sanitation_access = indicator_value.x.x.x,  
+    gdp = indicator_value.y.y.y,    
+    unemployment_rate = indicator_value.x.x.x.x,  
+    inflation_rate = indicator_value.y.y.y.y   
+  )
+
+```
+
+
+
+```{r interactive-histograms, fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+merged_data$log_gdp <- log(merged_data$gdp)
+merged_data$log_inflation_rate <- log(merged_data$inflation_rate + 1)
+merged_data$log_unemployment_rate <- log(merged_data$unemployment_rate + 1)
+
+p1 <- ggplot(merged_data, aes(x = log_gdp)) + 
+  geom_histogram(binwidth = 0.2, fill = "purple", color = "black", alpha = 0.7) +
+  labs(
+    x = "Log of GDP (in US$)", 
+    y = "Frequency", 
+    caption = "Figure 1: Log-Transformed GDP Distribution (in US$)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), 
+    axis.title = element_text(size = 12)
+  )
+
+p2 <- ggplot(merged_data, aes(x = log_unemployment_rate)) + 
+  geom_histogram(binwidth = 0.1, fill = "gold", color = "black", alpha = 0.7) +
+  labs(
+    x = "Log of Unemployment Rate", 
+    y = "Frequency", 
+    caption = "Figure 2: Log-Transformed Unemployment Rate Distribution"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), 
+    axis.title = element_text(size = 12)
+  )
+
+p3 <- ggplot(merged_data, aes(x = log_inflation_rate)) + 
+  geom_histogram(binwidth = 0.1, fill = "salmon", color = "black", alpha = 0.7) +
+  labs(
+    x = "Log of Inflation Rate", 
+    y = "Frequency", 
+    caption = "Figure 3: Log-Transformed Inflation Rate Distribution"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), 
+    axis.title = element_text(size = 12)
+  )
+
+p4 <- ggplot(merged_data, aes(x = life_expectancy)) + 
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "black", alpha = 0.7) +
+  labs(x = "Life Expectancy (years)", y = "Frequency", caption = "Figure 4: Life Expectancy Distribution") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), axis.title = element_text(size = 12))
+
+p5 <- ggplot(merged_data, aes(x = mortality_rate)) + 
+  geom_histogram(binwidth = 5, fill = "tomato", color = "black", alpha = 0.7) +
+  labs(x = "Mortality Rate (per 1,000)", y = "Frequency", caption = "Figure 5: Mortality Rate Distribution") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), axis.title = element_text(size = 12))
+
+p6 <- ggplot(merged_data, aes(x = immunization_rate)) + 
+  geom_histogram(binwidth = 2, fill = "forestgreen", color = "black", alpha = 0.7) +
+  labs(x = "Immunization Rate (%)", y = "Frequency", caption = "Figure 6: Immunization Rate Distribution") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), axis.title = element_text(size = 12))
+
+p7 <- ggplot(merged_data, aes(x = water_access)) + 
+  geom_histogram(binwidth = 5, fill = "darkcyan", color = "black", alpha = 0.7) +
+  labs(x = "Water Access (%)", y = "Frequency", caption = "Figure 7: Water Access Distribution") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), axis.title = element_text(size = 12))
+
+p8 <- ggplot(merged_data, aes(x = sanitation_access)) + 
+  geom_histogram(binwidth = 5, fill = "orange", color = "black", alpha = 0.7) +
+  labs(x = "Sanitation Access (%)", y = "Frequency", caption = "Figure 8: Sanitation Access Distribution") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"), axis.title = element_text(size = 12))
+
+
+ggplotly(p1)
+```
+
+- **Figure 1**: This histogram illustrates the distribution of the log-transformed GDP across countries. The transformation helps normalize skewness from extremely large GDP values, making the distribution more symmetrical and suitable for modeling.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p2)
+```
+
+- **Figure 2**: The unemployment rate distribution, after log transformation, shows a clearer view of variability across countries. Most countries fall within a relatively narrow range, though some outliers remain.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p3)
+```
+
+- **Figure 3**: This plot shows the log-transformed inflation rate. The distribution reveals that while most countries have moderate inflation, a few experience significantly higher rates, even after transformation.
+
+
+Here are the distributions of the five health indicators across all countries from 1960 to 2023.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p4)
+```
+
+- **Figure 4**: This histogram shows the distribution of life expectancy across countries. Most countries have a life expectancy between 60 and 80 years, indicating relatively high health standards globally.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p5)
+```
+
+- **Figure 5**: The mortality rate (under age 5) varies significantly. While many countries have low rates, a few exhibit extremely high mortality, reflecting healthcare disparities.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p6)
+```
+
+- **Figure 6**: Immunization rates cluster around 80–100%, suggesting that many countries have well-established vaccination programs. However, the presence of lower values points to regions with less access.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p7)
+```
+
+- **Figure 7**: Access to safe water is generally high, but a notable number of countries still fall below universal coverage, indicating room for infrastructure improvement.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p8)
+```
+
+- **Figure 8**: Sanitation access shows a wider spread, with more countries lacking full coverage. This suggests that sanitation remains a key development challenge.

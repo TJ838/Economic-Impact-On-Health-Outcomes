@@ -1,0 +1,22 @@
+---
+title: "JSC370 Final Project"
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+        lib_dir: "libs"
+        self_contained: FALSE
+---
+
+This website presents the final project for JSC370, where I analyze the relationships between **economic indicators** (GDP, unemployment, inflation) and **health outcomes** (life expectancy, mortality, immunization, water and sanitation access) using data from the World Bank.
+
+This project explores the relationship between key economic and health indicators across countries using data sourced from the World Bank. The goal is to investigate how a country's economic environment—measured by GDP, unemployment, and inflation—may influence public health outcomes such as life expectancy, child mortality, immunization coverage, access to clean water, and sanitation.
+
+I used a combination of data cleaning, visualization, and exploratory regression analysis to identify patterns and potential associations between these indicators. The project highlights both broad global trends and country-specific insights.
+
+By creating an interactive website, I aim to make this analysis accessible and engaging. Users can explore interactive plots that illustrate key findings, compare indicators, and better understand the socioeconomic factors shaping health outcomes worldwide.
+
+
+You can view the report and dataset here.
+[Here's the Github Repo for the project](https://github.com/TJ838/Economic-Impact-On-Health-Outcomes)
+

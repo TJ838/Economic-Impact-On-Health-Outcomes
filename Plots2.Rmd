@@ -1,0 +1,164 @@
+---
+title: "Visualization for Relationship Between Economic and Health Indicators"
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+        lib_dir: "libs"
+        self_contained: FALSE
+---
+
+```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
+library(data.table)
+library(tidytext)
+library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(car)
+library(readr)
+library(lubridate)
+library(ggpubr)
+library(splines)
+library(mgcv)
+library(kableExtra)
+library(httr)
+library(jsonlite)
+library(purrr)
+library(ggcorrplot)
+library(scales)
+library(tm)
+library(SnowballC)
+library(wordcloud2)
+library(tibble)
+library(caret)
+library(randomForest)
+library(slam)
+library(plotly)
+```
+
+Here are the scatterplots of the three economic indicators with five health indicators across all countries from 1960 to 2023. As there were a total of 15 combinations, I only picked a few combinations that are relatively meaningful to display.
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+life_expectancy_data <- read.csv("life_expectancy_data.csv")
+mortality_data <- read.csv("mortality_data.csv")
+immunization_data <- read.csv("immunization_data.csv")
+water_access_data <- read.csv("water_access_data.csv")
+sanitation_access_data <- read.csv("sanitation_access_data.csv")
+gdp_data <- read.csv("gdp_data.csv")
+unemployment_data <- read.csv("unemployment_data.csv")
+inflation_data <- read.csv("inflation_data.csv")
+
+merged_data <- life_expectancy_data %>%
+  full_join(mortality_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(immunization_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(water_access_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(sanitation_access_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(gdp_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(unemployment_data, by = c("country_code", "country_name", "year")) %>%
+  full_join(inflation_data, by = c("country_code", "country_name", "year"))
+
+merged_data <- merged_data %>%
+  select(
+    country_code = country_code,
+    country_name = country_name,
+    year = year,
+    life_expectancy = indicator_value.x,  
+    mortality_rate = indicator_value.y,   
+    immunization_rate = indicator_value.x.x,  
+    water_access = indicator_value.y.y, 
+    sanitation_access = indicator_value.x.x.x,  
+    gdp = indicator_value.y.y.y,    
+    unemployment_rate = indicator_value.x.x.x.x,  
+    inflation_rate = indicator_value.y.y.y.y   
+  )
+
+```
+
+
+```{r interactive-histograms, fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+
+merged_data$log_gdp <- log(merged_data$gdp)
+merged_data$log_inflation_rate <- log(merged_data$inflation_rate + 1)
+merged_data$log_unemployment_rate <- log(merged_data$unemployment_rate + 1)
+p9 <- ggplot(merged_data, aes(x = log_gdp, y = life_expectancy)) + 
+  geom_point(alpha = 0.6, color = "steelblue") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  scale_x_log10() +
+  labs(x = "GDP (Log Scale)", y = "Life Expectancy (years)", caption = "Figure 9: Relationship Between GDP and Life Expectancy") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+p10 <- ggplot(merged_data, aes(x = log_unemployment_rate, y = mortality_rate)) + 
+  geom_point(alpha = 0.6, color = "tomato") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(x = "Unemployment Rate (Log Scale)", y = "Mortality Rate (per 1,000)", caption = "Figure 10: Relationship Between Unemployment and Mortality Rate") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+p11 <- ggplot(merged_data, aes(x = log_inflation_rate, y = immunization_rate)) + 
+  geom_point(alpha = 0.6, color = "forestgreen") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  scale_x_log10() +
+  labs(x = "Inflation Rate (Log Scale)", y = "Immunization Rate (%)", caption = "Figure 11: Relationship Between Inflation and Immunization Rate") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+p12 <- ggplot(merged_data, aes(x = log_gdp, y = water_access)) + 
+  geom_point(alpha = 0.6, color = "darkcyan") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  scale_x_log10() +
+  labs(x = "GDP (Log Scale)", y = "Water Access (%)", caption = "Figure 12: Relationship Between GDP and Water Access") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+p13 <- ggplot(merged_data, aes(x = log_gdp, y = sanitation_access)) + 
+  geom_point(alpha = 0.6, color = "orange") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  scale_x_log10() +
+  labs(x = "GDP (Log Scale)", y = "Sanitation Access (%)", caption = "Figure 13: Relationship Between GDP and Sanitation Access") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+p14 <- ggplot(merged_data, aes(x = log_unemployment_rate, y = life_expectancy)) + 
+  geom_point(alpha = 0.6, color = "purple") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  labs(x = "Unemployment Rate (Log Scale)", y = "Life Expectancy (years)", caption = "Figure 14: Relationship Between Unemployment Rate and Life Expectancy") +
+  theme_minimal() +
+  theme(plot.caption = element_text(hjust = 0.5, size = 12, face = "bold"))
+
+ggplotly(p9)
+```
+- **Figure 9**: This scatterplot displays the relationship between GDP (log scale) and life expectancy. A positive linear trend is evident, suggesting that wealthier countries tend to have longer life expectancies due to better healthcare systems and living standards.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p10)
+```
+- **Figure 10**: This plot shows how the unemployment rate is associated with child mortality rates. Higher unemployment appears to correlate with higher under-5 mortality, possibly indicating stress on family income and access to healthcare.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p11)
+```
+- **Figure 11**: This figure highlights the association between inflation (log scale) and immunization rates. As inflation increases, immunization coverage tends to decrease slightly, which may reflect economic instability affecting public health delivery.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p12)
+```
+- **Figure 12**: Here we observe a positive relationship between GDP (log scale) and access to safe water. Wealthier nations generally provide better access to clean water due to stronger infrastructure.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p13)
+```
+- **Figure 13**: This scatterplot shows that GDP is also positively related to sanitation access. Countries with higher GDP tend to have broader sanitation coverage, reflecting investment in public health infrastructure.
+
+
+```{r fig.width=7, fig.height=5,echo = FALSE, message=FALSE, warning=FALSE}
+ggplotly(p14)
+```
+- **Figure 14**: This figure shows a negative relationship between unemployment and life expectancy, implying that economic hardship may reduce longevity by limiting access to healthcare and increasing stress.
+

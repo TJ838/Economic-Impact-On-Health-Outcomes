@@ -1,0 +1,8 @@
+name: "my-website"
+navbar:
+  title: "JSC370 Final Project"
+  left:
+    - text: "Variables Visualizations"
+      href: Plots1.html
+    - text: "Relationship Visualizations"
+      href: Plots2.html
