@@ -6,6 +6,9 @@ This project explores the relationship between key economic indicators and globa
 
 Interactive Visualization Website: https://tj838.github.io/Economic-Impact-On-Health-Outcomes/
 
+Presentation Video: https://utoronto-my.sharepoint.com/:v:/g/personal/tiger_jin_mail_utoronto_ca/EbJUQNzUKfdLn7NXx7DKhkQBuPp_32VFHFTtm1_NVDeKjA?e=PCayaz
+(It expires after 30 days)
+
 ## Data Source
 
 - **World Bank Open Data API**
