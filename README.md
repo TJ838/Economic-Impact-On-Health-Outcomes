@@ -4,6 +4,8 @@
 
 This project explores the relationship between key economic indicators and global health outcomes using data from the World Bank. The objective is to understand how variables such as GDP, inflation, and unemployment affect life expectancy, mortality rate, immunization coverage, and access to basic services like clean water and sanitation.
 
+Interactive Visualization Website: 
+
 ## Data Source
 
 - **World Bank Open Data API**
@@ -22,19 +24,5 @@ This project explores the relationship between key economic indicators and globa
 
 ## Structure
 
-- `index.html`: Interactive website with plots and summaries
 - `report.pdf`: Final written report
-- `scripts/`: R scripts for data processing and modeling
 - `data/`: Raw and processed datasets
-
-## How to View
-
-1. Clone the repository.
-2. Open `index.html` in your browser to explore the visualizations interactively.
-3. Review `report.pdf` for detailed analysis and conclusions.
-
-## Author
-
-- Student Name
-- Course: JSC370 Final Project
-- Date: April 2025
