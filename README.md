@@ -4,7 +4,7 @@
 
 This project explores the relationship between key economic indicators and global health outcomes using data from the World Bank. The objective is to understand how variables such as GDP, inflation, and unemployment affect life expectancy, mortality rate, immunization coverage, and access to basic services like clean water and sanitation.
 
-Interactive Visualization Website: 
+Interactive Visualization Website: https://tj838.github.io/Economic-Impact-On-Health-Outcomes/
 
 ## Data Source
 
